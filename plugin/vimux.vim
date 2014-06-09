@@ -132,7 +132,9 @@ endfunction
 
 function! VimuxPromptCommand()
   let l:command = input(_VimuxOption("g:VimuxPromptString", "Command? "))
-  call VimuxRunCommand(l:command)
+  if !empty(l:command)
+    call VimuxRunCommand(l:command)
+  endif
 endfunction
 
 function! _VimuxTmuxSession()
