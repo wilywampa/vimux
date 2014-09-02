@@ -11,7 +11,7 @@ command VimuxInspectRunner :call VimuxInspectRunner()
 command VimuxScrollUpInspect :call VimuxScrollUpInspect()
 command VimuxScrollDownInspect :call VimuxScrollDownInspect()
 command VimuxInterruptRunner :call VimuxInterruptRunner()
-command VimuxPromptCommand :call VimuxPromptCommand()
+command -nargs=? VimuxPromptCommand :call VimuxPromptCommand(<args>)
 command VimuxClearRunnerHistory :call VimuxClearRunnerHistory()
 command VimuxTogglePane :call VimuxTogglePane()
 
