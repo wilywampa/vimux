@@ -45,12 +45,26 @@ function! VimuxRunCommand(command, ...)
 endfunction
 
 function! VimuxSendText(text)
-  call VimuxSendKeys('"'.escape(a:text, '"$').'"')
+  let text = substitute(a:text, ';$', ';;', '')
+  let text = '"'.escape(text, '"$').'"'
+  if exists("g:VimuxRunnerIndex")
+    let zoomed = _VimuxTmuxWindowZoomed()
+    call system("tmux "
+        \ .(zoomed ? "resize-pane -Z \\; " : "" )
+        \ ."send-keys -l -t ".g:VimuxRunnerIndex." -- ".text)
+    if zoomed | call system("tmux resize-pane -Z") | endif
+  else
+    echo "No vimux runner pane/window. Create one with VimuxOpenRunner"
+  endif
 endfunction
 
 function! VimuxSendKeys(keys)
   if exists("g:VimuxRunnerIndex")
-    call system("tmux send-keys -t ".g:VimuxRunnerIndex." ".a:keys)
+    let zoomed = _VimuxTmuxWindowZoomed()
+    call system("tmux "
+        \ .(zoomed ? "resize-pane -Z \\; " : "" )
+        \ ."send-keys -t ".g:VimuxRunnerIndex." -- ".a:keys)
+    if zoomed | call system("tmux resize-pane -Z") | endif
   else
     echo "No vimux runner pane/window. Create one with VimuxOpenRunner"
   endif
@@ -97,7 +111,9 @@ endfunction
 function! VimuxZoomRunner()
   if exists("g:VimuxRunnerIndex")
     if _VimuxRunnerType() == "pane"
-      call system("tmux resize-pane -Z -t ".g:VimuxRunnerIndex)
+      if !_VimuxTmuxWindowZoomed()
+        call system("tmux resize-pane -Z -t ".g:VimuxRunnerIndex)
+      endif
     elseif _VimuxRunnerType() == "window"
       call system("tmux select-window -t ".g:VimuxRunnerIndex)
     endif
@@ -105,8 +121,8 @@ function! VimuxZoomRunner()
 endfunction
 
 function! VimuxInspectRunner()
-  call system("tmux select-"._VimuxRunnerType()." -t ".g:VimuxRunnerIndex)
-  call system("tmux copy-mode")
+  call system("tmux select-"._VimuxRunnerType()." -t ".g:VimuxRunnerIndex
+      \ ." \\; copy-mode")
 endfunction
 
 function! VimuxScrollUpInspect()
@@ -156,6 +172,10 @@ endfunction
 
 function! _VimuxTmuxWindowIndex()
   return _VimuxTmuxProperty("#I")
+endfunction
+
+function! _VimuxTmuxWindowZoomed()
+  return _VimuxTmuxProperty("#F") =~# 'Z'
 endfunction
 
 function! _VimuxNearestIndex()
