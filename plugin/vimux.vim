@@ -147,11 +147,10 @@ function! VimuxClearRunnerHistory()
   endif
 endfunction
 
-function! VimuxPromptCommand()
-  let l:command = input(_VimuxOption("g:VimuxPromptString", "Command? "))
-  if !empty(l:command)
-    call VimuxRunCommand(l:command)
-  endif
+function! VimuxPromptCommand(...)
+  let command = a:0 == 1 ? a:1 : ""
+  let l:command = input(_VimuxOption("g:VimuxPromptString", "Command? "), command)
+  call VimuxRunCommand(l:command)
 endfunction
 
 function! _VimuxTmuxSession()
