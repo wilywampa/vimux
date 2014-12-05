@@ -49,10 +49,10 @@ function! VimuxSendText(text)
   let text = '"'.escape(text, '"$').'"'
   if exists("g:VimuxRunnerIndex")
     let zoomed = _VimuxTmuxWindowZoomed()
-    call system("tmux "
+    silent call system("tmux "
         \ .(zoomed ? "resize-pane -Z \\; " : "" )
         \ ."send-keys -l -t ".g:VimuxRunnerIndex." -- ".text)
-    if zoomed | call system("tmux resize-pane -Z") | endif
+    silent if zoomed | call system("tmux resize-pane -Z") | endif
   else
     echo "No vimux runner pane/window. Create one with VimuxOpenRunner"
   endif
@@ -61,10 +61,10 @@ endfunction
 function! VimuxSendKeys(keys)
   if exists("g:VimuxRunnerIndex")
     let zoomed = _VimuxTmuxWindowZoomed()
-    call system("tmux "
+    silent call system("tmux "
         \ .(zoomed ? "resize-pane -Z \\; " : "" )
         \ ."send-keys -t ".g:VimuxRunnerIndex." -- ".a:keys)
-    if zoomed | call system("tmux resize-pane -Z") | endif
+    silent if zoomed | call system("tmux resize-pane -Z") | endif
   else
     echo "No vimux runner pane/window. Create one with VimuxOpenRunner"
   endif
@@ -80,20 +80,20 @@ function! VimuxOpenRunner()
       if _VimuxRunnerType() == "pane"
         let height = _VimuxOption("g:VimuxHeight", 20)
         let orientation = _VimuxOption("g:VimuxOrientation", "v")
-        call system("tmux split-window -p ".height." -".orientation)
+        silent call system("tmux split-window -p ".height." -".orientation)
       elseif _VimuxRunnerType() == "window"
-        call system("tmux new-window")
+        silent call system("tmux new-window")
       endif
 
       let g:VimuxRunnerIndex = _VimuxTmuxIndex()
-      call system("tmux last-"._VimuxRunnerType())
+      silent call system("tmux last-"._VimuxRunnerType())
     endif
   endif
 endfunction
 
 function! VimuxCloseRunner()
   if exists("g:VimuxRunnerIndex")
-    call system("tmux kill-"._VimuxRunnerType()." -t ".g:VimuxRunnerIndex)
+    silent call system("tmux kill-"._VimuxRunnerType()." -t ".g:VimuxRunnerIndex)
     unlet g:VimuxRunnerIndex
   endif
 endfunction
@@ -101,10 +101,10 @@ endfunction
 function! VimuxTogglePane()
   if exists("g:VimuxRunnerIndex")
     if _VimuxRunnerType() == "window"
-        call system("tmux join-pane -d -s ".g:VimuxRunnerIndex." -p "._VimuxOption("g:VimuxHeight", 20))
+        silent call system("tmux join-pane -d -s ".g:VimuxRunnerIndex." -p "._VimuxOption("g:VimuxHeight", 20))
         let g:VimuxRunnerType = "pane"
     elseif _VimuxRunnerType() == "pane"
-		let g:VimuxRunnerIndex=substitute(system("tmux break-pane -d -t ".g:VimuxRunnerIndex." -P -F '#{window_index}'"), "\n", "", "")
+		silent let g:VimuxRunnerIndex=substitute(system("tmux break-pane -d -t ".g:VimuxRunnerIndex." -P -F '#{window_index}'"), "\n", "", "")
         let g:VimuxRunnerType = "window"
     endif
   endif
@@ -114,28 +114,28 @@ function! VimuxZoomRunner()
   if exists("g:VimuxRunnerIndex")
     if _VimuxRunnerType() == "pane"
       if !_VimuxTmuxWindowZoomed()
-        call system("tmux resize-pane -Z -t ".g:VimuxRunnerIndex)
+        silent call system("tmux resize-pane -Z -t ".g:VimuxRunnerIndex)
       endif
     elseif _VimuxRunnerType() == "window"
-      call system("tmux select-window -t ".g:VimuxRunnerIndex)
+      silent call system("tmux select-window -t ".g:VimuxRunnerIndex)
     endif
   endif
 endfunction
 
 function! VimuxInspectRunner()
-  call system("tmux select-"._VimuxRunnerType()." -t ".g:VimuxRunnerIndex
+  silent call system("tmux select-"._VimuxRunnerType()." -t ".g:VimuxRunnerIndex
       \ ." \\; copy-mode")
 endfunction
 
 function! VimuxScrollUpInspect()
   call VimuxInspectRunner()
-  call system("tmux last-"._VimuxRunnerType())
+  silent call system("tmux last-"._VimuxRunnerType())
   call VimuxSendKeys("C-u")
 endfunction
 
 function! VimuxScrollDownInspect()
   call VimuxInspectRunner()
-  call system("tmux last-"._VimuxRunnerType())
+  silent call system("tmux last-"._VimuxRunnerType())
   call VimuxSendKeys("C-d")
 endfunction
 
@@ -145,14 +145,14 @@ endfunction
 
 function! VimuxClearRunnerHistory()
   if exists("g:VimuxRunnerIndex")
-    call system("tmux clear-history -t ".g:VimuxRunnerIndex)
+    silent call system("tmux clear-history -t ".g:VimuxRunnerIndex)
   endif
 endfunction
 
 function! VimuxPromptCommand(...)
   let command = a:0 == 1 ? a:1 : ""
   let l:command = input(_VimuxOption("g:VimuxPromptString", "Command? "), command)
-  call VimuxRunCommand(l:command)
+  if len(l:command) | call VimuxRunCommand(l:command) | endif
 endfunction
 
 function! _VimuxTmuxSession()
@@ -180,11 +180,11 @@ function! _VimuxTmuxWindowZoomed()
 endfunction
 
 function! _VimuxNearestIndex()
-  let views = split(system("tmux list-"._VimuxRunnerType()."s"), "\n")
+  silent let views = split(system("tmux list-"._VimuxRunnerType()."s"), "\n")
 
   for view in views
     if match(view, "(active)") == -1
-      return split(view, ":")[0]
+      return split(view, ":")[0].(_VimuxRunnerType() == "pane" ? "" : ".")
     endif
   endfor
 
@@ -204,9 +204,9 @@ function! _VimuxOption(option, default)
 endfunction
 
 function! _VimuxTmuxProperty(property)
-    return substitute(system("tmux display -p '".a:property."'"), '\n$', '', '')
+    silent return substitute(system("tmux display -p '".a:property."'"), '\n$', '', '')
 endfunction
 
 function! _VimuxHasRunner(index)
-  return match(system("tmux list-"._VimuxRunnerType()."s -a"), a:index.":")
+  silent return match(system("tmux list-"._VimuxRunnerType()."s -a"), a:index.":")
 endfunction
