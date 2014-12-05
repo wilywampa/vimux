@@ -73,19 +73,21 @@ endfunction
 function! VimuxOpenRunner()
   let nearestIndex = _VimuxNearestIndex()
 
-  if _VimuxOption("g:VimuxUseNearest", 1) == 1 && nearestIndex != -1
-    let g:VimuxRunnerIndex = nearestIndex
-  else
-    if _VimuxRunnerType() == "pane"
-      let height = _VimuxOption("g:VimuxHeight", 20)
-      let orientation = _VimuxOption("g:VimuxOrientation", "v")
-      call system("tmux split-window -p ".height." -".orientation)
-    elseif _VimuxRunnerType() == "window"
-      call system("tmux new-window")
-    endif
+  if !exists('g:VimuxRunnerIndex')
+    if _VimuxOption("g:VimuxUseNearest", 1) == 1 && nearestIndex != -1
+      let g:VimuxRunnerIndex = nearestIndex
+    else
+      if _VimuxRunnerType() == "pane"
+        let height = _VimuxOption("g:VimuxHeight", 20)
+        let orientation = _VimuxOption("g:VimuxOrientation", "v")
+        call system("tmux split-window -p ".height." -".orientation)
+      elseif _VimuxRunnerType() == "window"
+        call system("tmux new-window")
+      endif
 
-    let g:VimuxRunnerIndex = _VimuxTmuxIndex()
-    call system("tmux last-"._VimuxRunnerType())
+      let g:VimuxRunnerIndex = _VimuxTmuxIndex()
+      call system("tmux last-"._VimuxRunnerType())
+    endif
   endif
 endfunction
 
