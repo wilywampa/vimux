@@ -184,7 +184,9 @@ function! _VimuxTmuxWindowIndex()
 endfunction
 
 function! _VimuxTmuxWindowZoomed()
-  return _VimuxTmuxProperty("#F") =~# 'Z'
+  return _VimuxTmuxProperty("#F") =~# 'Z' && (
+      \ !exists('g:VimuxRunnerIndex') || g:VimuxRunnerIndex !~ '\.' ||
+      \ g:VimuxRunnerIndex =~# '^'._VimuxTmuxWindowIndex().'\.')
 endfunction
 
 function! _VimuxNearestIndex()
