@@ -54,7 +54,7 @@ endfunction
 
 function! VimuxSendText(text)
   let text = substitute(a:text, ';$', ';;', '')
-  let text = '"'.escape(text, '"$').'"'
+  let text = '"'.escape(text, '"$`').'"'
   if exists("g:VimuxRunnerIndex")
     let zoomed = _VimuxTmuxWindowZoomed()
     silent call system("tmux "
