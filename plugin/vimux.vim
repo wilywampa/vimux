@@ -24,7 +24,7 @@ function! VimuxRunCommandInDir(command, useFile)
 endfunction
 
 function! VimuxRunLastCommand()
-  if exists("g:VimuxRunnerIndex")
+  if exists("g:VimuxRunnerIndex") && exists("g:VimuxLastCommand")
     call VimuxRunCommand(g:VimuxLastCommand)
   else
     echo "No last vimux command."
@@ -42,7 +42,6 @@ function! VimuxRunCommand(command, ...)
   endif
 
   let resetSequence = _VimuxOption("g:VimuxResetSequence", "q C-u")
-  let g:VimuxLastCommand = a:command
 
   call VimuxSendKeys(resetSequence)
   call VimuxSendText(a:command)
@@ -160,7 +159,10 @@ endfunction
 function! VimuxPromptCommand(...)
   let command = a:0 == 1 ? a:1 : ""
   let l:command = input(_VimuxOption("g:VimuxPromptString", "Command? "), command)
-  if len(l:command) | call VimuxRunCommand(l:command) | endif
+  if len(l:command)
+    call VimuxRunCommand(l:command)
+    let g:VimuxLastCommand = l:command
+  endif
 endfunction
 
 function! _VimuxTmuxSession()
