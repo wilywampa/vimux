@@ -186,6 +186,9 @@ function! _VimuxTmuxWindowIndex()
 endfunction
 
 function! _VimuxTmuxWindowZoomed()
+  if exists("g:VimuxRunnerType") && g:VimuxRunnerType !=# "pane"
+    return 0
+  endif
   return _VimuxTmuxProperty("#F") =~# 'Z' && (
       \ !exists('g:VimuxRunnerIndex') || g:VimuxRunnerIndex !~ '\.' ||
       \ g:VimuxRunnerIndex =~# '^'._VimuxTmuxWindowIndex().'\.')
