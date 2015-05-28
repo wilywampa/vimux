@@ -43,7 +43,9 @@ function! VimuxRunCommand(command, ...)
 
   let resetSequence = _VimuxOption("g:VimuxResetSequence", "q C-u")
 
-  call VimuxSendKeys(resetSequence)
+  if VimuxSendKeys(resetSequence)
+    return
+  endif
   call VimuxSendText(a:command)
 
   if l:autoreturn == 1
@@ -56,10 +58,11 @@ function! VimuxSendText(text)
   let text = '"'.escape(text, '"$`\').'"'
   if exists("g:VimuxRunnerIndex")
     let zoomed = _VimuxTmuxWindowZoomed()
-    silent call system("tmux "
+    silent let result = system("tmux "
         \ .(zoomed ? "resize-pane -Z \\; " : "" )
         \ ."send-keys -l -t ".g:VimuxRunnerIndex." -- ".text)
     silent if zoomed | call system("tmux resize-pane -Z") | endif
+    if len(result) | call s:warn(result) | endif
   else
     echo "No vimux runner pane/window. Create one with VimuxOpenRunner"
   endif
@@ -68,13 +71,29 @@ endfunction
 function! VimuxSendKeys(keys)
   if exists("g:VimuxRunnerIndex")
     let zoomed = _VimuxTmuxWindowZoomed()
-    silent call system("tmux "
+    silent let result = system("tmux "
         \ .(zoomed ? "resize-pane -Z \\; " : "" )
         \ ."send-keys -t ".g:VimuxRunnerIndex." -- ".a:keys)
     silent if zoomed | call system("tmux resize-pane -Z") | endif
+    if len(result)
+      call s:warn(result)
+      return 1
+    endif
   else
     echo "No vimux runner pane/window. Create one with VimuxOpenRunner"
   endif
+endfunction
+
+function! s:warn(msg)
+  echohl WarningMsg
+  redraw!
+  try
+    for line in split(a:msg, "\n")
+      echomsg line
+    endfor
+  finally
+    echohl None
+  endtry
 endfunction
 
 function! VimuxOpenRunner()
