@@ -33,7 +33,10 @@ endfunction
 
 function! VimuxRunCommand(command, ...)
   if !exists("g:VimuxRunnerIndex") || _VimuxHasRunner(g:VimuxRunnerIndex) == -1
-    call VimuxOpenRunner()
+    echohl WarningMsg
+    echomsg "'g:VimuxRunnerIndex' does not exist"
+    echohl None
+    return
   endif
 
   let l:autoreturn = 1
