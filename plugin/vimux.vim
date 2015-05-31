@@ -245,5 +245,10 @@ function! _VimuxTmuxProperty(property)
 endfunction
 
 function! _VimuxHasRunner(index)
-  silent return match(system("tmux list-"._VimuxRunnerType()."s -a"), a:index.":")
+  silent let runners = system("tmux list-"._VimuxRunnerType()."s -a")
+  if stridx(a:index, '%') == -1
+    return match(runners, a:index.":")
+  else
+    return match(runners, a:index)
+  endif
 endfunction
