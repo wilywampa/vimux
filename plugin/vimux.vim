@@ -209,8 +209,15 @@ function! _VimuxTmuxWindowIndex()
   return _VimuxTmuxProperty("#I")
 endfunction
 
+function! _VimuxWindowPanes()
+  return split(_VimuxTmux('list-panes -F "#{pane_id}"'), '\n')
+endfunction
+
 function! _VimuxTmuxWindowZoomed()
   if exists("g:VimuxRunnerType") && g:VimuxRunnerType !=# "pane"
+    return 0
+  elseif get(g:, 'VimuxRunnerIndex', '') =~# '^%\d\+$' &&
+      \ index(_VimuxWindowPanes(), g:VimuxRunnerIndex) == -1
     return 0
   endif
   return _VimuxTmuxProperty("#F") =~# 'Z' && (
